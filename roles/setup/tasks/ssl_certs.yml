@@ -1,0 +1,39 @@
+---
+- name: Remove 127.0.1.1 from hosts
+  lineinfile:
+    dest: /etc/hosts
+    regexp: '^127\.0\.1\.1'
+    state: absent
+
+- name: Point localhost to 127.0.0.1
+  lineinfile:
+    dest: /etc/hosts
+    regexp: '^127\.0\.0\.1'
+    line: '127.0.0.1 localhost localhost.localdomain'
+    state: present
+
+- name: Build hosts file
+  lineinfile:
+    dest: /etc/hosts
+    regexp: '.*{{ hostvars[item].ansible_hostname }}.*' 
+    line: "{{ hostvars[item].ansible_default_ipv4.address }} {{ hostvars[item].ansible_hostname }} {{ hostvars[item].ansible_hostname }}.{{ domainname }}"
+  when: hostvars[item].ansible_default_ipv4.address is defined
+  with_items: "{{ groups.all }}"
+
+- name: ssl certificate
+  copy:
+    src: files/ssl/nectar-wildcard-certcombined.pem
+    dest: /etc/ssl/certs/nectar-wildcard-certcombined.pem
+    mode: 0644
+
+- name: ssl private key
+  copy:
+    src: files/ssl/nectar-wildcard-key.pem
+    dest: /etc/ssl/private/nectar-wildcard-key.pem
+    mode: 0600
+
+- name: copy dhparams
+  copy:
+    src: files/ssl/nectar-dh-params.pem
+    dest: /etc/ssl/nectar-dh-params.pem
+    mode: 0644

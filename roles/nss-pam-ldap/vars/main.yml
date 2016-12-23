@@ -1,0 +1,7 @@
+---
+nss_pam_ldap_uid_default: nslcd
+nss_pam_ldap_gid_default: nslcd
+
+nss_pam_ldap_dep_pkgs:
+  - libnss-ldapd
+  - libpam-ldapd

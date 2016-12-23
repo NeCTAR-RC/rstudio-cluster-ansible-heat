@@ -1,0 +1,222 @@
+heat_template_version: 2015-10-15
+
+description: R-Studio cluster
+
+parameters:
+  app_name:
+    type: string
+    description: Application name
+    default: rstudio
+  key_name:
+    type: string
+    description: Name of keypair to assign to servers
+    default: andy
+  availability_zone:
+    type: string
+    description: The NeCTAR zone in which the VM is to run (must have block storage)
+    default: melbourne-np
+  image_id:
+    type: string
+    description: ID of image to use for servers (NeCTAR Ubuntu 16.04 LTS (Xenial) amd64 v11)
+    default: 8ccac42b-2ea4-4abd-b4da-32a97a97fb46
+  flavor:
+    type: string
+    description: Flavor to use for servers
+    default: m2.small
+  volume_size:
+    type: string
+    description: NFS shared home size in GB
+    default: 10
+  host_name:
+    type: string
+    description: Designate host name
+    default: rstudio
+  domain_name:
+    type: string
+    description: Designate domain name
+    default: 'dev.rc.nectar.org.au.'
+  stage:
+    type: string
+    description: Stage
+    default: prod
+    constraints:
+      - allowed_values:
+        - prod
+        - test
+        - dev
+
+resources:
+  secgroup:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Security group
+      name: 
+        list_join: ['-', [ { get_param: app_name }, { get_param: stage }, 'secgroup' ]]
+
+  master_secgroup_rules:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Security group rules
+      name: 
+        list_join: ['-', [ { get_param: app_name }, { get_param: stage }, 'master-secgroup-rules' ]]
+      rules:
+        - remote_group_id: { get_resource: secgroup }
+          remote_mode: remote_group_id
+          protocol: tcp
+          port_range_min: 1
+          port_range_max: 65535
+
+        - remote_group_id: { get_resource: secgroup }
+          remote_mode: remote_group_id
+          protocol: udp
+          port_range_min: 1
+          port_range_max: 65535
+
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 22
+          port_range_max: 22
+
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 443
+          port_range_max: 443
+
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+
+  worker_secgroup_rules:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Security group worker rules
+      name: 
+        list_join: ['-', [ { get_param: app_name }, { get_param: stage }, 'worker-secgroup-rules' ]]
+      rules:
+        - remote_group_id: { get_resource: secgroup }
+          remote_mode: remote_group_id
+          protocol: tcp
+          port_range_min: 1
+          port_range_max: 65535
+
+        - remote_group_id: { get_resource: secgroup }
+          remote_mode: remote_group_id
+          protocol: udp
+          port_range_min: 1
+          port_range_max: 65535
+
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 22
+          port_range_max: 22
+
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+
+  master_server:
+    type: OS::Nova::Server
+    properties:
+      name:
+        list_join: ['-', [ { get_param: app_name }, { get_param: stage }, 'master' ]]
+      image: { get_param: image_id }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      availability_zone: { get_param: availability_zone }
+      security_groups: [ { get_resource: secgroup }, { get_resource: master_secgroup_rules } ]
+      metadata:
+        ansible_host_groups:
+          list_join:
+            - ','
+            - - { get_param: app_name }
+              - list_join: ['-', [ { get_param: app_name }, { get_param: stage }, 'master' ]]
+              - list_join: ['-', [ { get_param: app_name }, { get_param: stage } ]]
+              - list_join: ['-', [ { get_param: app_name }, 'master' ]]
+        ansible_host_vars: 
+          list_join:
+            - ';'
+            - - list_join: ['=', ['application', { get_param: app_name }]]
+              - list_join: ['=', ['stage', { get_param: stage }]]
+              - 'role=master'
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash -v
+            DEVICE_ID="/dev/disk/by-id/virtio-$(echo mount_device_id | cut -c -20)"
+            parted $DEVICE_ID mklabel gpt mkpart P1 ext4 1MiB 100%
+            sleep 10
+            mkfs.ext4 "${DEVICE_ID}-part1"
+            mkdir -p mount_directory
+            mount "${DEVICE_ID}-part1" mount_directory
+            echo "${DEVICE_ID}-part1    mount_directory    ext4  defaults,noatime       0 0" >> /etc/fstab
+          params:
+            mount_directory: /shared
+            mount_device_id: { get_resource: master_server_volume }
+  master_dns_record:
+    type: OS::Designate::Record
+    properties:
+      name:
+        list_join:
+          - '.'
+          - - { get_param: host_name }
+          - - { get_param: domain_name }
+      type: A
+      data: { get_attr: [ master_server, first_address ] }
+      domain: { get_param: domain_name }
+
+  master_server_volume:
+    type: OS::Cinder::Volume
+    properties:
+      size: { get_param: volume_size }
+      availability_zone: { get_param: availability_zone }
+      name:
+        list_join: ['-', [ { get_param: app_name }, 'shared-volume' ]]
+
+  master_server_volume_attachment:
+    type: OS::Cinder::VolumeAttachment
+    properties:
+      volume_id: { get_resource: master_server_volume }
+      instance_uuid: { get_resource: master_server }
+      mountpoint: /dev/vdc
+
+  worker_servers:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: 2
+      resource_def:
+        type: OS::Nova::Server
+        properties:
+          name: 
+            list_join: ['-', [ { get_param: app_name }, { get_param: stage }, 'worker-%index%' ]]
+          image: { get_param: image_id }
+          flavor: { get_param: flavor }
+          key_name: { get_param: key_name }
+          availability_zone: { get_param: availability_zone }
+          security_groups: [ { get_resource: secgroup }, { get_resource: master_secgroup_rules } ]
+          metadata:
+            ansible_host_groups:
+              list_join:
+                - ','
+                - - { get_param: app_name }
+                  - list_join: ['-', [ { get_param: app_name }, { get_param: stage }, 'worker' ]]
+                  - list_join: ['-', [ { get_param: app_name }, { get_param: stage } ]]
+                  - list_join: ['-', [ { get_param: app_name }, 'worker' ]]
+            ansible_host_vars: 
+              list_join:
+                - ';'
+                - - list_join: ['=', ['application', { get_param: app_name }]]
+                  - list_join: ['=', ['stage', { get_param: stage }]]
+                  - role=worker
+
+outputs:
+  master_id:
+    description: ID of the master server
+    value: { get_resource: master_server }
+  master_ip:
+    description: IP address of the master server
+    value: { get_attr: [ master_server, first_address ] }
+  worker_ids:
+    description: IDs of the worker servers
+    value: { get_attr: [ worker_servers, refs ] }
+  worker_ips:
+    description: IPs of the worker servers
+    value: { get_attr: [ worker_servers, first_address ] }
+

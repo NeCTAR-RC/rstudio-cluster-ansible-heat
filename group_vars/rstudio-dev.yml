@@ -1,0 +1,7 @@
+---
+domain_name: rstudio-dev.dev.rc.nectar.org.au
+rstudio_master_ip: '{{ hostvars[groups["rstudio-dev-master"][0]].ansible_default_ipv4.address }}'
+rstudio_server_load_balancer_cookie: df4474f6-33e6-4528-ba0d-d19554edc671
+rstudio_server_load_balancer_nodes: "{{ groups['rstudio-dev'] | map('extract', hostvars, ['ansible_ssh_host']) | list }}"
+
+# vim: syntax=yaml

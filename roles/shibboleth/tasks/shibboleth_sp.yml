@@ -1,0 +1,54 @@
+---
+- name: Install apache2 and shibboleth module
+  apt: pkg={{ item }} state=present
+  with_items:
+    - libapache2-mod-shib2
+
+- name: Enable apache2 shibboleth module
+  command: a2enmod shib2
+  notify:
+    - restart apache
+
+- name: Enable apache2 ssl module
+  command: a2enmod ssl
+  notify:
+    - restart apache
+
+- name: Download federation metadata signing certificate
+  get_url:
+    url: "{{ shibboleth_sp_federation_signer_certificate_url }}"
+    dest: /etc/shibboleth/federation_signer.crt
+
+- name: Create SSL private key
+  copy:
+    content: "{{ shibboleth_sp_private_key }}"
+    dest: /etc/shibboleth/shibboleth.key
+  when: shibboleth_sp_private_key is defined
+
+- name: Create SSL certificate
+  copy:
+    content: "{{ shibboleth_sp_certificate }}"
+    dest: /etc/shibboleth/shibboleth.crt
+  when: shibboleth_sp_certificate is defined
+  
+- name: Create self-signed SSL cert
+  become: yes
+  command: openssl req -new -nodes -x509 -subj "/CN={{ shibboleth_sp_hostname }}" -days 3650 -keyout /etc/shibboleth/shibboleth.key -out /etc/shibboleth/shibboleth.crt
+  args:
+    creates: /etc/shibboleth/shibboleth.key
+  when: shibboleth_sp_private_key is not defined and shibboleth_sp_certificate is not defined
+
+- name: setup shibboleth2.xml
+  template:
+    dest: /etc/shibboleth/shibboleth2.xml
+    src: shibboleth2.xml.j2
+  notify: restart shibd
+
+- name: Copy default config files
+  become: yes
+  copy:
+    src: files/{{ item }}
+    dest: /etc/shibboleth/{{ item }}
+  with_items:
+    - attribute-map.xml
+    - attribute-policy.xml

@@ -1,0 +1,6 @@
+.cache
+credentials/*
+roles/setup/files/ssl/*
+
+# Contains private key (should fix)
+group_vars/rstudio-*-master.yml

@@ -1,0 +1,2 @@
+---
+sharedhome_nfsoptions: 'rsize=8192,wsize=8192,timeo=14,intr,nfsvers=3,acl'

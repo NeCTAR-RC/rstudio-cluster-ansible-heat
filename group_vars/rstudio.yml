@@ -1,0 +1,53 @@
+---
+# Match the path in the Heat config
+nfs_shared_path: /shared
+
+home_directory_path: '{{ nfs_shared_path }}/home'
+shared_r_modules_path: '{{ nfs_shared_path }}/r_packages' 
+r_packages_lib: /usr/local/lib/R/site-library
+
+sharedhome_nfsserver: "{{ rstudio_master_ip }}"
+sharedhome_nfspath: "{{ nfs_shared_path }}"
+sharedhome_nfsmount: "{{ nfs_shared_path }}"
+sharedhome_homedir: "{{ home_directory_path }}"
+
+slapd_domain: localdomain
+slapd_basedn: '{{ "dc=" + slapd_domain.split(".") | join(",dc=") }}'
+slapd_basedn_admin: '{{ "cn=admin," + slapd_basedn }}'
+slapd_basedn_admin_basepw: '{{ "credentials/slapd/" + slapd_basedn + "/" + slapd_basedn_admin }}'
+slapd_basedn_admin_password: '{{ slapd_basedn_admin_basepw + ".password" }}'
+
+# LDAP Client
+nss_pam_ldap_uri: 
+  - 'ldap://{{ rstudio_master_ip }}/'
+nss_pam_ldap_dn: '{{ slapd_basedn }}'
+nss_pam_ldap_binddn: '{{ slapd_basedn_admin }}'
+nss_pam_ldap_bindpw: '{{ lookup("password", slapd_basedn_admin_password) }}'
+
+rstudio_server_install_pro: True
+
+rstudio_server_www_address: 0.0.0.0
+rstudio_server_admin_enabled: True
+rstudio_server_admin_group: r-admin
+rstudio_server_admin_superuser_group: r-super-admin
+
+rstudio_server_load_balancer: sessions
+
+rstudio_server_shared_storage_path: "{{ nfs_shared_path }}/rstudio_shared"
+rstudio_server_logging_enabled: 1
+
+r_cran_mirror: https://cran.ms.unimelb.edu.au
+r_install_dev: true
+
+r_install:
+  - libhdf4-0-alt
+  - hdf4-tools
+  - libnetcdf-dev
+  - netcdf-bin
+  - proj-bin
+  - libproj-dev
+  - libgdal-dev
+  - gdal-bin
+  - libudunits2-dev
+
+# vim: syntax=yaml

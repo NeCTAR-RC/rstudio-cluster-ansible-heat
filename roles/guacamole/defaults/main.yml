@@ -1,0 +1,17 @@
+---
+guacamole_install_prefix: /usr/local
+
+guacamole_guacd_server: 127.0.0.1
+guacamole_guacd_port: 4822
+guacamole_home: /etc/guacamole
+#guacamole_home: /usr/share/{{ tomcat_package }}/.guacamole
+guacamole_version: 0.9.9
+guacamole_client_version: 0.9.9
+guacamole_shibble_auth_version: 0.9.9-3
+
+# MySQL Properties
+guacamole_mysql_host: 127.0.0.1
+guacamole_mysql_port: 3306
+guacamole_mysql_database: guac
+guacamole_mysql_username: guacuser
+guacamole_mysql_password: guacpass

@@ -1,0 +1,4 @@
+---
+sharedhome_nfsserver: "{{ rstudio_master_ip }}"
+sharedhome_nfspath: "{{ nfs_shared_path }}"
+sharedhome_nfsmount: "{{ nfs_shared_path }}"

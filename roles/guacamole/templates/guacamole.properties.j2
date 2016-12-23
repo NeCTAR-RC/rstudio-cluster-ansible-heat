@@ -1,0 +1,15 @@
+# Hostname and port of Guacamole proxy
+guacd-hostname: {{ guacamole_guacd_server }}
+guacd-port:     {{ guacamole_guacd_port }}
+
+# MySQL Properties
+mysql-hostname: {{ guacamole_mysql_host }}
+mysql-port: {{ guacamole_mysql_port }}
+mysql-database: {{ guacamole_mysql_database }}
+mysql-username: {{ guacamole_mysql_username }}
+mysql-password: {{ guacamole_mysql_password }}
+
+# Shibble Properties
+{% if guacamole_shibboleth_username_header is defined %}
+shibboleth-username-header: {{ guacamole_shibboleth_username_header }}
+{% endif %}

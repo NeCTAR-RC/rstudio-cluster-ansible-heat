@@ -1,0 +1,4 @@
+.project
+.vagrant
+._*
+test_vars.yml

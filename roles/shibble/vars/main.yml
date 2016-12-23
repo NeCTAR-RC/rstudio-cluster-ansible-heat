@@ -1,0 +1,15 @@
+---
+shibble_dependencies:
+  - git-core
+  - python-sqlalchemy
+  - python-bottle
+  - python-oslo-config
+  - python-pastedeploy
+  - python-ldap
+  - python-virtualenv
+  - python-pymysql
+  - python-weberror
+  - python-wheel
+  - python-jinja2
+  - python-beaker
+  - python-markupsafe

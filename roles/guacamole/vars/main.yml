@@ -1,0 +1,24 @@
+---
+tomcat_package: tomcat8
+
+guacamole_packages:
+  - libcairo2-dev
+  - libjpeg-turbo8-dev
+  - libpng12-dev
+  - libossp-uuid-dev
+  - libfreerdp-dev
+  - libpango1.0-dev
+  - libssh2-1-dev
+  - libtelnet-dev
+  - libvncserver-dev
+  - libpulse-dev
+  - libssl-dev
+  - libvorbis-dev
+  - libwebp-dev
+  - mysql-client
+  - mysql-common
+  - mysql-utilities
+  - freerdp
+  - xrdp
+  - ghostscript
+  - "{{ tomcat_package }}"

@@ -1,0 +1,59 @@
+---
+- name: All hosts
+  hosts: all
+
+- name: Master server
+  hosts: rstudio-master
+  become: yes
+
+  roles:
+    - role: setup
+      tags: setup
+    - role: slapd
+      tags: slapd
+    - role: nss-pam-ldap
+      tags: nss-pam-ldap
+    - role: nfs
+      tags: nfs
+    - role: xfce4-desktop
+      tags: desktop
+    - role: r
+      tags: r
+    - role: rstudio
+      tags: rstudio
+    - role: rstudio-server
+      tags: rstudio-server
+#    - role: shiny-server
+    - role: mysql
+    - role: shibboleth
+      tags: shibboleth
+    - role: apache
+      tags: apache
+    - role: shibble
+      tags: shibble
+    - role: guacamole
+      tags: guacamole
+    - role: tigervncserver
+      tags: tigervncserver
+    - role: custom-config
+      tags: custom-config
+
+- name: Worker servers
+  hosts: rstudio-worker
+  become: yes
+
+  roles:
+    - role: setup
+      tags: setup
+    - role: nss-pam-ldap
+      tags: nss-pam-ldap
+    - role: sharedhome
+      tags: sharedhome
+    - role: r
+      tags: r
+    - role: rstudio
+      tags: rstudio
+    - role: rstudio-server
+      tags: rstudio-server
+#    - role: shiny-server
+#      tags: shiny-server

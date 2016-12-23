@@ -1,0 +1,26 @@
+[DEFAULT]
+# global configuration
+debug = {{ shibble_debug_enabled }}
+support_url = {{ shibble_support_url }}
+service_url = {{ shibble_service_url }}
+
+[ldap]
+connection_string = {{ shibble_ldap_connection_string }}
+bind_dn = {{ shibble_ldap_bind_dn }}
+bind_pw = {{ shibble_ldap_bind_password }}
+user_dn = {{ shibble_ldap_user_dn }}
+home_dir_path = {{ shibble_home_dir_path }}
+group_id = {{ shibble_ldap_group_id }}
+
+[filter-app:main]
+use = egg:beaker#beaker_session
+session.cookie_expires = true
+session.data_dir = {{ shibble_var_lib_dir }}/data/sessions/data
+session.lock_dir = {{ shibble_var_lib_dir }}/data/sessions/lock
+next = shibble
+
+[app:shibble]
+use = egg:shibble
+database_uri = mysql://{{ shibble_mysql_username }}:{{ shibble_mysql_password }}@{{ shibble_mysql_host }}:{{ shibble_mysql_port }}/{{ shibble_mysql_database }}
+target = {{ shibble_target }}
+logging = /etc/shibble/logging.conf

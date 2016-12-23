@@ -1,0 +1,12 @@
+---
+shibble_debug_enabled: false
+shibble_var_lib_dir: /var/lib/shibble
+shibble_install_dir: /opt/shibble
+shibble_ldap_group_id: 2000
+#shibble_rapid_connect_url: 'please_set'
+#shibble_rapid_connect_secret: '{{ lookup("password", "credentials/shibble/rapid_connect_secret length=32 chars=ascii_letters,digits,hexdigits,punctuation") }}'
+shibble_mysql_host: localhost
+shibble_mysql_port: 3306
+shibble_mysql_database: shibble
+shibble_mysql_username: shibble
+shibble_mysql_password: '{{ lookup("password", "credentials/shibble/database_password length=32") }}'

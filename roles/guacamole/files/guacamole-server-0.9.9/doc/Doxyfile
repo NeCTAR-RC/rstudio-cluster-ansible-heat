@@ -1,0 +1,42 @@
+
+#
+# Project name / version
+#
+
+PROJECT_NAME   = libguac
+PROJECT_NUMBER = 0.9.9
+
+#
+# Warn about undocumented parameters and return values, but do not fill output
+# with verbose progress info.
+#
+
+QUIET            = YES
+WARN_NO_PARAMDOC = YES
+
+#
+# Output format
+#
+
+ALPHABETICAL_INDEX    = YES
+GENERATE_HTML         = YES
+GENERATE_LATEX        = NO
+IGNORE_PREFIX         = guac_ vguac_
+OPTIMIZE_OUTPUT_FOR_C = YES
+OUTPUT_DIRECTORY      = doxygen-output
+RECURSIVE             = YES 
+SHOW_INCLUDE_FILES    = NO
+
+#
+# Input format
+#
+
+CASE_SENSE_NAMES     = YES
+EXCLUDE_SYMBOLS      = __* guac_palette*
+FILE_PATTERNS        = *.h
+INPUT                = ../src/libguac/guacamole
+JAVADOC_AUTOBRIEF    = YES
+STRIP_FROM_PATH      = ../src/libguac
+TAB_SIZE             = 4
+TYPEDEF_HIDES_STRUCT = YES
+

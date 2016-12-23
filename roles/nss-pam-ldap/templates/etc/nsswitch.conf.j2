@@ -1,0 +1,21 @@
+# {{ ansible_managed }}
+# /etc/nsswitch.conf
+#
+# Example configuration of GNU Name Service Switch functionality.
+# If you have the `glibc-doc-reference' and `info' packages installed, try:
+# `info libc "Name Service Switch"' for information about this file.
+
+passwd:         {{nss_pam_ldap_nss_passwd | default(["compat", "ldap"]) | join(" ")}}
+group:          {{nss_pam_ldap_nss_group | default(["compat", "ldap"]) | join(" ")}}
+shadow:         {{nss_pam_ldap_nss_shadow | default(["compat", "ldap"]) | join(" ")}}
+gshadow:        files
+
+hosts:          files dns
+networks:       files
+
+protocols:      db files
+services:       db files
+ethers:         db files
+rpc:            db files
+
+netgroup:       nis

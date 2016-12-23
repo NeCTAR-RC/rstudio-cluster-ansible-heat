@@ -1,0 +1,53 @@
+---
+#nss_pam_ldap_uid: nslcd
+#nss_pam_ldap_gid: ldap
+#nss_pam_ldap_uri: ["ldap://127.0.0.1/"]
+#nss_pam_ldap_dn: 'dc=example,dc=com'
+
+#nss_pam_ldap_binddn: 'cn=proxyuser,{{nss_pam_ldap_dn}}'
+#nss_pam_ldap_bindpw: 'secret'
+#nss_pam_ldap_rootpwmoddn: 'cn=admin,{{nss_pam_ldap_dn}}'
+
+#nss_pam_ldap_scope:
+#  - sub
+#  - one
+#  - base
+
+#nss_pam_ldap_custom_lookups:
+#  - db: base
+#    ty: group
+#    target: ou=Groups,dc=example,dc=com
+#  - db: base
+#    ty: passwd
+#    target: ou=People,dc=example,dc=com
+
+#nss_pam_ldap_bind_timelimit: 30
+#nss_pam_ldap_timelimit: 30
+#nss_pam_ldap_idle_timelimit: 3600
+
+#nss_pam_ldap_ssl: start_tls
+#nss_pam_ldap_tls_cacertdir: /etc/ssl/certs
+#nss_pam_ldap_tls_cacertfile: /etc/ssl/ca.cert
+#nss_pam_ldap_tls_ciphers: TLSv1
+#nss_pam_ldap_tls_cer: /etc/ssl/{{inventory-hostname}}-key.pem
+
+#nss_pam_ldap_nss_passwd: ['files', 'ldap']
+#nss_pam_ldap_nss_shadow: ['files', 'ldap']
+#nss_pam_ldap_nss_group: ['files', 'ldap']
+#nss_pam_ldap_nss_hosts:
+#  - files
+#  - dns
+#  - myhostname
+#  - mymachines
+#  - ldap
+#nss_pam_ldap_nss_bootparams: ['files', 'ldap']
+#nss_pam_ldap_nss_ethers: ['files', 'ldap']
+#nss_pam_ldap_nss_protocols: ['files', 'ldap']
+#nss_pam_ldap_nss_rpc: ['files', 'ldap']
+#nss_pam_ldap_nss_services: ['files', 'ldap']
+#nss_pam_ldap_nss_netgroup: ['ldap']
+#nss_pam_ldap_nss_publickey: ['files', 'ldap']
+#nss_pam_ldap_nss_automount: ['files', 'ldap']
+#nss_pam_ldap_nss_aliases: ['files', 'ldap']
+
+#nss_pam_ldap_minimum_uid: 1000

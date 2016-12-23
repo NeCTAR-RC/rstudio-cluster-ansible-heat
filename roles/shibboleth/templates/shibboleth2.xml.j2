@@ -1,0 +1,44 @@
+<SPConfig xmlns="urn:mace:shibboleth:2.0:native:sp:config"
+    xmlns:conf="urn:mace:shibboleth:2.0:native:sp:config"
+    xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+    xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+    xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata"
+    clockSkew="180">
+
+    <ApplicationDefaults entityID="{{ shibboleth_sp_entity_id }}"
+                         REMOTE_USER="{{ shibboleth_sp_remote_user }}">
+
+        <Sessions lifetime="28800" timeout="{{ shibboleth_sp_session_timeout }}" relayState="ss:mem"
+                  checkAddress="false" handlerSSL="{{ shibboleth_sp_handler_ssl|lower }}"
+                  cookieProps="{{ shibboleth_sp_cookie_props }}"
+                  consistentAddress="{{ shibboleth_sp_consistent_address|lower }}">
+            <SSO discoveryProtocol="SAMLDS" discoveryURL="{{ shibboleth_sp_discovery_service_url }}">
+              SAML2 SAML1
+            </SSO>
+            <Logout>SAML2 Local</Logout>
+            <Handler type="MetadataGenerator" Location="/Metadata" signing="false"/>
+            <Handler type="Status" Location="/Status" acl="127.0.0.1 ::1"/>
+            <Handler type="Session" Location="/Session" showAttributeValues="false"/>
+            <Handler type="DiscoveryFeed" Location="/DiscoFeed"/>
+        </Sessions>
+
+        <MetadataProvider type="XML" uri="{{ shibboleth_sp_federation_metadata_url }}"
+            backingFilePath="federation.xml" reloadInterval="7200">
+            <MetadataFilter type="Signature" certificate="/etc/shibboleth/federation_signer.crt"/>
+        </MetadataProvider>
+
+        <AttributeExtractor type="XML" validate="true" reloadChanges="false" path="attribute-map.xml"/>
+
+        <AttributeResolver type="Query" subjectMatch="true"/>
+
+        <AttributeFilter type="XML" validate="true" path="attribute-policy.xml"/>
+
+        <CredentialResolver type="File" key="/etc/shibboleth/shibboleth.key"
+            certificate="/etc/shibboleth/shibboleth.crt"/>
+
+    </ApplicationDefaults>
+
+    <SecurityPolicyProvider type="XML" validate="true" path="security-policy.xml"/>
+    <ProtocolProvider type="XML" validate="true" reloadChanges="false" path="protocols.xml"/>
+
+</SPConfig>

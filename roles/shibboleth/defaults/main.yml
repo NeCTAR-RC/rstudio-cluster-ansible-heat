@@ -1,0 +1,22 @@
+---
+# defaults file for shibboleth_sp
+shibboleth_sp_hostname: "{{ hostvars[ansible_fqdn] }}"
+shibboleth_sp_remote_user: 'eppn persistent-id targeted-id'
+shibboleth_sp_session_timeout: 3600
+shibboleth_sp_entity_id: "https://{{ shibboleth_sp_hostname }}/shibboleth"
+shibboleth_sp_consistent_address: true
+shibboleth_sp_handler_ssl: true
+shibboleth_sp_cookie_props: https
+
+#shibboleth_sp_private_key:
+#shibboleth_sp_certificate:
+
+# Prod
+#shibboleth_sp_federation_signer_certificate_url: 'https://md.aaf.edu.au/aaf-metadata-certificate.pem'
+#shibboleth_sp_discovery_service_url: 'https://ds.aaf.edu.au/discovery/DS'
+#shibboleth_sp_federation_metadata_url: 'https://md.aaf.edu.au/aaf-metadata.xml'
+
+# Test
+shibboleth_sp_federation_signer_certificate_url: 'https://md.test.aaf.edu.au/aaf-metadata-certificate.pem'
+shibboleth_sp_discovery_service_url: 'https://ds.test.aaf.edu.au/discovery/DS'
+shibboleth_sp_federation_metadata_url: 'https://md.test.aaf.edu.au/aaf-test-metadata.xml'

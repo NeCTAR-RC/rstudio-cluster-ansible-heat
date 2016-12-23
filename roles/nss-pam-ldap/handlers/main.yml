@@ -1,0 +1,6 @@
+---
+- name: restart nslcd
+  become: yes
+  service: name=nslcd
+           state=restarted
+

@@ -1,0 +1,213 @@
+---
+
+slapd_pki: False
+slapd_snapshot: False
+slapd_ldapscripts: True
+
+nfs_exports: 
+  - "/{{ nfs_shared_path }} *(rw,sync,no_root_squash)"
+
+shibboleth_sp_hostname: '{{ domain_name }}'
+shibboleth_sp_remote_user: mail
+
+shibble_debug_enabled: True
+shibble_support_url: 'https://{{ domain_name }}'
+shibble_service_url: 'https://{{ domain_name }}'
+shibble_target: 'https://{{ domain_name }}/rstudio'
+
+shibble_ldap_connection_string: 'ldap://{{ rstudio_master_ip }}/'
+shibble_ldap_bind_dn: '{{ slapd_basedn_admin }}'
+shibble_ldap_bind_password: '{{ lookup("password", slapd_basedn_admin_password) }}'
+shibble_ldap_user_dn: '{{ "ou=Users," + slapd_basedn }}'
+shibble_ldap_group_dn: '{{ "ou=Groups," + slapd_basedn }}'
+shibble_home_dir_path: '{{ home_directory_path }}'
+shibble_ldap_group_id: 2000
+
+shibble_mysql_host: localhost
+shibble_mysql_port: 3306
+shibble_mysql_database: shibble
+shibble_mysql_username: shibble
+shibble_mysql_password: '{{ lookup("password", "credentials/shibble/database_password length=32") }}'
+
+guacamole_mysql_host: '{{ shibble_mysql_host }}'
+guacamole_mysql_port: '{{ shibble_mysql_port }}'
+guacamole_mysql_database: '{{ shibble_mysql_database }}'
+guacamole_mysql_username: '{{ shibble_mysql_username }}'
+guacamole_mysql_password: '{{ shibble_mysql_password }}'
+
+guacamole_ldap_user_base_dn: '{{ "ou=Users," + slapd_basedn }}'
+guacamole_ldap_config_base_dn: '{{ "ou=Groups," + slapd_basedn }}'
+guacamole_ldap_search_bind_dn: '{{ slapd_basedn_admin }}'
+guacamole_ldap_search_bind_password: '{{ lookup("password", slapd_basedn_admin_password) }}'
+
+guacamole_shibboleth_username_header: 'REMOTE_USER'
+
+apache_create_vhosts: true
+apache_vhosts_filename: vhosts.conf
+apache_ssl_protocol: "All -SSLv2 -SSLv3"
+apache_ssl_cipher_suite: "AES256+EECDH:AES256+EDH"
+apache_vhosts: []
+
+apache_packages:
+  - apache2
+  - apache2-utils
+  - libapache2-mod-wsgi
+
+apache_vhosts_ssl:
+  - servername: '{{ domain_name }}'
+    documentroot: '/var/www/html'
+    certificate_file: '/etc/ssl/certs/nectar-wildcard-certcombined.pem'
+    certificate_key_file: '/etc/ssl/private/nectar-wildcard-key.pem'
+    extra_parameters: |
+      <Location />
+          SetHandler None
+          AuthType shibboleth
+          ShibRequireSession On
+          require valid-user
+          RewriteCond %{LA-U:REMOTE_USER} (.+)
+          RewriteRule . - [E=RU:%1]
+          RequestHeader set REMOTE_USER "%{RU}e" env=RU
+      </Location>
+
+      <Location /guacamole/>
+          Order allow,deny
+          Allow from all
+          ProxyPass http://localhost:8080/guacamole/ flushpackets=on
+          ProxyPassReverse http://localhost:8080/guacamole/
+      </Location>
+      
+      <Location /guacamole/websocket-tunnel>
+          Order allow,deny
+          Allow from all
+          ProxyPass ws://localhost:8080/guacamole/websocket-tunnel
+          ProxyPassReverse ws://localhost:8080/guacamole/websocket-tunnel
+      </Location>
+
+      RewriteEngine On
+      ProxyRequests Off
+
+      RewriteRule ^/shibboleth(.*) /auth [PT,L]
+
+      RewriteCond %{REQUEST_URI} ^/rstudio(.*)/auth-sign-in$
+      RewriteCond %{QUERY_STRING} !^error
+      RewriteRule ^/rstudio(.*)/auth-sign-in$ /auth [PT,L]
+
+      RewriteCond %{HTTP:Upgrade} =websocket
+      RewriteRule /rstudio(.*) ws://localhost:8787$1 [P,L]
+      RewriteRule /shiny(.*) ws://localhost:3838$1 [P,L]
+      RewriteCond %{HTTP:Upgrade} !=websocket
+      RewriteRule /rstudio(.*) http://localhost:8787$1 [P,L]
+      RewriteRule /shiny(.*) http://localhost:3838$1 [P,L]
+
+      ProxyPass /rstudio/ http://localhost:8787/
+      ProxyPassReverse /rstudio/ http://localhost:8787/
+      ProxyPass /shiny/ http://localhost:8787/
+      ProxyPassReverse /shiny/ http://localhost:3838/
+
+      WSGIApplicationGroup %{GLOBAL}
+      WSGIDaemonProcess shibble group=shibble processes=1 threads=1 user=shibble python-path=/opt/shibble/venv/lib/python2.7/site-packages
+      WSGIProcessGroup shibble
+      WSGIScriptAlias /auth "/usr/share/shibble/shibble.wsgi"
+
+
+apache_mods_enabled:
+  - headers.load
+  - rewrite.load
+  - ssl.load
+  - proxy.load
+  - proxy_http.load
+  - proxy_wstunnel.load
+  - wsgi.load
+
+r_packages:
+  - name: abind
+  - name: ade4
+  - name: adehabitatHR
+  - name: adehabitatLT
+  - name: adehabitatMA
+  - name: akima
+  - name: animation
+  - name: bit
+  - name: bitops
+  - name: brew
+  - name: caTools
+  - name: changepoint
+  - name: CircStats
+  - name: coda
+  - name: colorspace
+  - name: crawl
+  - name: deldir
+  - name: devtools
+  - name: dichromat
+  - name: digest
+  - name: dismo
+  - name: diveMove
+  - name: evaluate
+  - name: ff
+  - name: FNN
+  - name: foreach
+  - name: formatR
+  - name: gdalUtils
+  - name: GeoLight
+  - name: geometry
+  - name: geosphere
+  - name: ggplot2
+  - name: gstat
+  - name: gtable
+  - name: highr
+  - name: htmltools
+  - name: httpuv
+  - name: httr
+  - name: intervals
+  - name: iterators
+  - name: jsonlite
+  - name: knitr
+  - name: labeling
+  - name: magic
+  - name: mapdata
+  - name: maps
+  - name: maptools
+  - name: markdown
+  - name: memoise
+  - name: mime
+  - name: misc3d
+  - name: munsell
+  - name: mvtnorm
+  - name: ncdf4
+  - name: plyr
+  - name: polyclip
+  - name: proto
+  - name: quantreg
+  - name: R6
+  - name: raster
+  - name: RColorBrewer
+  - name: Rcpp
+  - name: RCurl
+  - name: reshape2
+  - name: rgdal
+  - name: rgeos
+  - name: RJSONIO
+  - name: rmarkdown
+  - name: R.methodsS3
+  - name: RNetCDF
+  - name: R.oo
+  - name: roxygen2
+  - name: rstudioapi
+  - name: R.utils
+  - name: scales
+  - name: shiny
+  - name: sp
+  - name: spacetime
+  - name: SparseM
+  - name: stringr
+  - name: tensor
+  - name: testthat
+  - name: trip
+  - name: whisker
+  - name: XML
+  - name: xtable
+  - name: xts
+  - name: yaml
+  - name: zoo
+
+# vim: syntax=yaml

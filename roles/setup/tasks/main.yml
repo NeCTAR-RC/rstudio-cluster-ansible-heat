@@ -1,0 +1,7 @@
+---
+- include: apt_setup.yml
+- include: dirs.yml
+- include: etc_hosts.yml
+- include: remove_floppy.yml
+- include: ssl_certs.yml
+- include: timezone.yml

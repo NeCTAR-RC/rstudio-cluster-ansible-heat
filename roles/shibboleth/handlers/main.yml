@@ -1,0 +1,12 @@
+---
+
+# handlers file for shibboleth_sp
+- name: restart shibd
+  become: yes
+  service: name=shibd
+           state=restarted
+
+- name: restart apache
+  become: yes
+  service: name=apache2
+           state=restarted

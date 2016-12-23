@@ -1,0 +1,20 @@
+---
+- name: "Ensure {{ sharedhome_homedir }} directory exists"
+  file:
+    path: "{{ sharedhome_homedir }}"
+    state: directory
+
+- name: "Ensure R package directories exists"
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - /usr/local/lib/R
+    - "{{ shared_r_modules_path }}"
+
+- name: Create symlink for shared R packages
+  file:
+    src: "{{ shared_r_modules_path }}"
+    dest: "{{ r_packages_lib }}"
+    state: link
+

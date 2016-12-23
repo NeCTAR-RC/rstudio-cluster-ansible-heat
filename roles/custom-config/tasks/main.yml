@@ -1,0 +1,24 @@
+---
+- name: write nginx index file
+  copy: src=files/index.html dest=/var/www/html/index.html
+
+- name: add rusers ldap group
+  ldap_entry:
+    dn: 'cn=rusers,ou=Groups,{{ slapd_basedn }}'
+    objectClass: posixGroup
+    attributes:
+      gidNumber: '{{ shibble_ldap_group_id }}'
+    bind_dn: '{{ slapd_basedn_admin }}'
+    bind_pw: '{{ lookup("password", slapd_basedn_admin_password) }}'
+
+- name: install extra packages
+  apt:
+    name: "{{ item }}"
+    state: installed
+  with_items: "{{ extra_packages }}"
+
+- name: remove fd0 mount
+  mount:
+    name: /media/floppy0
+    src: /dev/fd0
+    state: absent

@@ -1,0 +1,105 @@
+---
+- name: adding shibble group
+  group:
+    name: shibble
+    system: yes
+
+- name: adding shibble user
+  user:
+    name: shibble
+    group: shibble
+    home: /var/lib/shibble
+    shell: /bin/false
+    system: yes
+    comment: 'Shibble'
+
+- name: creating directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - /var/lib/shibble
+    - /var/cache/shibble
+    - /usr/share/shibble
+    - /opt/shibble
+
+- name: creating directory /var/log/shibble
+  file:
+    path: /var/log/shibble
+    state: directory
+    owner: www-data
+    group: shibble
+    mode: 0770
+
+- name: creating directory /var/run/shibble
+  file:
+    path: /var/run/shibble
+    state: directory
+    owner: shibble
+    group: shibble
+    mode: 0770
+
+- name: creating directory /etc/shibble
+  file:
+    path: /etc/shibble
+    state: directory
+    owner: root
+    group: shibble
+    mode: 0750
+
+- name: install shibble config
+  template:
+    src: shibble.conf.j2
+    dest: /etc/shibble/shibble.conf
+  notify:
+    - restart apache
+
+- name: install dependencies
+  apt:
+    name: "{{ item }}"
+    state: installed
+  with_items: "{{ shibble_dependencies }}"
+
+- name: install shibble
+  pip:
+    name: 'git+https://github.com/NeCTAR-RC/python-shibble.git#egg=shibble'
+    virtualenv: '{{ shibble_install_dir }}'
+    virtualenv_site_packages: yes
+    editable: yes
+  notify:
+    - restart apache
+
+- name: install shibble.wsgi
+  copy:
+    src: '{{ shibble_install_dir }}/src/shibble/shibble/scripts/shibble.wsgi'
+    dest: /usr/share/shibble/shibble.wsgi
+    remote_src: True
+  notify:
+    - restart apache
+
+- name: install logging config
+  copy:
+    src: '{{ shibble_install_dir }}/src/shibble/docs/logging.conf'
+    dest: /etc/shibble/logging.conf
+    remote_src: True
+  notify:
+    - restart apache
+
+- name: Create database
+  mysql_db:
+    name: shibble
+    state: present
+    login_host: '{{ shibble_mysql_host }}'
+    login_port: '{{ shibble_mysql_port }}'
+  register: db_created
+
+- name: Create MySQL user
+  mysql_user:
+    name: '{{ shibble_mysql_username }}'
+    state: present
+    password: '{{ shibble_mysql_password }}'
+    login_host: '{{ shibble_mysql_host }}'
+    login_port: '{{ shibble_mysql_port }}'
+    priv: '{{ shibble_mysql_database }}.*:ALL'
+
