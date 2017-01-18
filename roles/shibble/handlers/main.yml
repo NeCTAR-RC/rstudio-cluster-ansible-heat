@@ -3,3 +3,8 @@
   become: yes
   service: name=apache2
            state=restarted
+
+- name: restart oddjobd
+  become: yes
+  service: name=oddjobd
+           state=restarted

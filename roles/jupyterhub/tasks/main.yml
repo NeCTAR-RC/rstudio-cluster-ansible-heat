@@ -1,0 +1,69 @@
+---
+- name: creating directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - /etc/jupyterhub
+    - /var/lib/jupyterhub
+    - /var/log/jupyterhub
+    - /var/run/jupyterhub
+
+- name: install jupyterhub config
+  template:
+    src: jupyterhub_config.py.j2
+    dest: /etc/jupyterhub/jupyterhub_config.py
+  notify:
+    - restart jupyterhub
+
+- name: install dependencies
+  apt:
+    name: "{{ item }}"
+    state: installed
+  with_items: "{{ jupyterhub_dependencies }}"
+
+- name: install configurable-http-proxy
+  npm:
+    name: configurable-http-proxy
+    global: yes
+
+# Ansible < 2.2.1 broken trying to use Python3 virtualenv with pip
+# https://github.com/ansible/ansible-modules-core/issues/5347
+- name: create virtualenv
+  shell: 'virtualenv --python=python3 --system-site-packages {{ jupyterhub_install_dir }}'
+  args:
+    creates: '{{ jupyterhub_install_dir }}/bin/python3'
+
+- name: install jupyterhub packages
+  pip:
+    name: "{{ item }}"
+    executable: '{{ jupyterhub_install_dir }}/bin/pip3'
+  with_items:
+    - jupyterhub
+    - ipython[notebook]
+    - jupyterhub-systemdspawner
+  notify:
+    - restart jupyterhub
+
+- name: install remote_user authenticator
+  pip:
+    name: git+https://github.com/cwaldbieser/jhub_remote_user_authenticator.git
+    executable: '{{ jupyterhub_install_dir }}/bin/pip3'
+    editable: false
+  notify:
+    - restart jupyterhub
+
+- name: install systemd service file for jupyterhub
+  template:
+    src: jupyterhub.service.j2
+    dest: /etc/systemd/system/jupyterhub.service
+  notify:
+    - restart jupyterhub
+
+- name: start jupyterhub
+  service:
+    name: jupyterhub
+    enabled: yes
+    state: started
+

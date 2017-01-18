@@ -1,0 +1,29 @@
+# {{ ansible_managed }}
+c = get_config()
+
+import os
+pjoin = os.path.join
+
+c.JupyterHub.base_url = '{{ jupyterhub_base_url }}'
+c.JupyterHub.ip = '{{ jupyterhub_listen_ip }}'
+
+runtime_dir = os.path.join('{{ jupyterhub_runtime_dir }}')
+
+# JupyterHub cookie secret and state db in /var/run/jupyterhub
+c.JupyterHub.cookie_secret_file = pjoin(runtime_dir, 'cookie_secret')
+c.JupyterHub.db_url = pjoin(runtime_dir, 'jupyterhub.sqlite')
+
+# Log file
+c.JupyterHub.extra_log_file = '/var/log/jupyterhub.log'
+
+# Spawner
+c.Spawner.cmd = '{{ jupyterhub_install_dir }}/bin/jupyterhub-singleuser'
+c.JupyterHub.spawner_class = 'systemdspawner.SystemdSpawner'
+c.SystemdSpawner.user_workingdir = '{{ jupyterhub_user_home_path }}/{USERNAME}'
+
+c.JupyterHub.authenticator_class = 'remote_user.remote_user_auth.RemoteUserLocalAuthenticator'
+c.LocalAuthenticator.create_system_users = True
+
+# specify users and admin
+#c.Authenticator.whitelist = {}
+#c.Authenticator.admin_users = {}

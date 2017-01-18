@@ -1,0 +1,8 @@
+---
+jupyterhub_dependencies:
+  - python3-pip
+  - npm
+  - nodejs-legacy
+  - python3-virtualenv
+  - virtualenv
+  - git

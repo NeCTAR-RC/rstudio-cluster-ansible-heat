@@ -6,30 +6,31 @@
 
 - name: Enable apache2 shibboleth module
   command: a2enmod shib2
-  notify:
-    - restart apache
+  notify: restart apache
 
 - name: Enable apache2 ssl module
   command: a2enmod ssl
-  notify:
-    - restart apache
+  notify: restart apache
 
 - name: Download federation metadata signing certificate
   get_url:
     url: "{{ shibboleth_sp_federation_signer_certificate_url }}"
     dest: /etc/shibboleth/federation_signer.crt
+  notify: restart shibd
 
 - name: Create SSL private key
   copy:
     content: "{{ shibboleth_sp_private_key }}"
     dest: /etc/shibboleth/shibboleth.key
   when: shibboleth_sp_private_key is defined
+  notify: restart shibd
 
 - name: Create SSL certificate
   copy:
     content: "{{ shibboleth_sp_certificate }}"
     dest: /etc/shibboleth/shibboleth.crt
   when: shibboleth_sp_certificate is defined
+  notify: restart shibd
   
 - name: Create self-signed SSL cert
   become: yes
@@ -37,6 +38,7 @@
   args:
     creates: /etc/shibboleth/shibboleth.key
   when: shibboleth_sp_private_key is not defined and shibboleth_sp_certificate is not defined
+  notify: restart shibd
 
 - name: setup shibboleth2.xml
   template:

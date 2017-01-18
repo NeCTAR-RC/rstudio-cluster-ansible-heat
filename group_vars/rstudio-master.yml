@@ -4,7 +4,7 @@ slapd_pki: False
 slapd_snapshot: False
 slapd_ldapscripts: True
 
-nfs_exports: 
+nfs_exports:
   - "/{{ nfs_shared_path }} *(rw,sync,no_root_squash)"
 
 shibboleth_sp_hostname: '{{ domain_name }}'
@@ -42,6 +42,10 @@ guacamole_ldap_search_bind_password: '{{ lookup("password", slapd_basedn_admin_p
 
 guacamole_shibboleth_username_header: 'REMOTE_USER'
 
+jupyterhub_install_dir: /opt/jupyterhub
+jupyterhub_base_url: /jupyterhub
+jupyterhub_user_home_path: '{{ home_directory_path }}'
+
 apache_create_vhosts: true
 apache_vhosts_filename: vhosts.conf
 apache_ssl_protocol: "All -SSLv2 -SSLv3"
@@ -59,6 +63,7 @@ apache_vhosts_ssl:
     certificate_file: '/etc/ssl/certs/nectar-wildcard-certcombined.pem'
     certificate_key_file: '/etc/ssl/private/nectar-wildcard-key.pem'
     extra_parameters: |
+
       <Location />
           SetHandler None
           AuthType shibboleth
@@ -67,6 +72,7 @@ apache_vhosts_ssl:
           RewriteCond %{LA-U:REMOTE_USER} (.+)
           RewriteRule . - [E=RU:%1]
           RequestHeader set REMOTE_USER "%{RU}e" env=RU
+          RequestHeader set X-RStudio-Username "%{RU}e" env=RU
       </Location>
 
       <Location /guacamole/>
@@ -75,7 +81,7 @@ apache_vhosts_ssl:
           ProxyPass http://localhost:8080/guacamole/ flushpackets=on
           ProxyPassReverse http://localhost:8080/guacamole/
       </Location>
-      
+
       <Location /guacamole/websocket-tunnel>
           Order allow,deny
           Allow from all
@@ -83,14 +89,26 @@ apache_vhosts_ssl:
           ProxyPassReverse ws://localhost:8080/guacamole/websocket-tunnel
       </Location>
 
+      <Location {{ jupyterhub_base_url }}>
+        ProxyPreserveHost On
+        ProxyPass http://localhost:8000{{ jupyterhub_base_url }}
+        ProxyPassReverse http://localhost:8000{{ jupyterhub_base_url }}
+
+        Header edit Origin "{{ domain_name }}{{ jupyterhub_base_url }}" 127.0.0.1:8000{{ jupyterhub_base_url }}
+        RequestHeader edit Origin "{{ domain_name }}/jupyterjub" 127.0.0.1:8000{{ jupyterhub_base_url }}
+        Header edit Referrer "{{ domain_name }}{{ jupyterhub_base_url }}" 127.0.0.1:8000{{ jupyterhub_base_url }}
+        RequestHeader edit Referrer "{{ domain_name }}{{ jupyterhub_base_url }}" 127.0.0.1:8000{{ jupyterhub_base_url }}
+      </Location>
+
+      <LocationMatch "{{ jupyterhub_base_url }}/(user/[^/]*)/(api/kernels/[^/]+/channels|terminals/websocket)/?">
+        ProxyPass ws://localhost:8000
+        ProxyPassReverse ws://localhost:8000
+      </LocationMatch>
+
       RewriteEngine On
       ProxyRequests Off
 
       RewriteRule ^/shibboleth(.*) /auth [PT,L]
-
-      RewriteCond %{REQUEST_URI} ^/rstudio(.*)/auth-sign-in$
-      RewriteCond %{QUERY_STRING} !^error
-      RewriteRule ^/rstudio(.*)/auth-sign-in$ /auth [PT,L]
 
       RewriteCond %{HTTP:Upgrade} =websocket
       RewriteRule /rstudio(.*) ws://localhost:8787$1 [P,L]
@@ -105,7 +123,7 @@ apache_vhosts_ssl:
       ProxyPassReverse /shiny/ http://localhost:3838/
 
       WSGIApplicationGroup %{GLOBAL}
-      WSGIDaemonProcess shibble group=shibble processes=1 threads=1 user=shibble python-path=/opt/shibble/venv/lib/python2.7/site-packages
+      WSGIDaemonProcess shibble group=shibble processes=1 threads=1 user=shibble python-path=/opt/shibble/lib/python2.7/site-packages
       WSGIProcessGroup shibble
       WSGIScriptAlias /auth "/usr/share/shibble/shibble.wsgi"
 

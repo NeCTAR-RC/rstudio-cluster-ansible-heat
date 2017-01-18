@@ -1,5 +1,7 @@
 ---
 shibble_debug_enabled: false
+shibble_user: shibble
+shibble_group: shibble
 shibble_var_lib_dir: /var/lib/shibble
 shibble_install_dir: /opt/shibble
 shibble_ldap_group_id: 2000

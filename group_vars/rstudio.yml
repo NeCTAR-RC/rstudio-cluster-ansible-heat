@@ -35,6 +35,7 @@ rstudio_server_load_balancer: sessions
 
 rstudio_server_shared_storage_path: "{{ nfs_shared_path }}/rstudio_shared"
 rstudio_server_logging_enabled: 1
+rstudio_server_auth_proxy_url: 'https://{{ domain_name }}'
 
 r_cran_mirror: https://cran.ms.unimelb.edu.au
 r_install_dev: true

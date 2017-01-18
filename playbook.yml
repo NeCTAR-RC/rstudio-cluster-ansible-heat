@@ -17,6 +17,8 @@
       tags: nfs
     - role: xfce4-desktop
       tags: desktop
+    - role: jupyterhub
+      tags: jupyterhub
     - role: r
       tags: r
     - role: rstudio

@@ -1,0 +1,5 @@
+---
+- name: restart jupyterhub
+  become: yes
+  service: name=jupyterhub
+           state=restarted

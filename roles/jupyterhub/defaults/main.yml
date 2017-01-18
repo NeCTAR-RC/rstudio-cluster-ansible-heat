@@ -1,0 +1,6 @@
+---
+jupyterhub_install_dir: /opt/jupyterhub
+jupyterhub_base_url: /jupyterhub
+jupyterhub_listen_ip: 127.0.0.1
+jupyterhub_runtime_dir: /var/lib/jupyterhub
+jupyterhub_user_home_path: /home

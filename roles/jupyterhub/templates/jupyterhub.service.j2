@@ -1,0 +1,10 @@
+[Unit]
+Description=Jupyterhub
+
+[Service]
+User=root
+ExecStart={{ jupyterhub_install_dir }}/bin/jupyterhub -f /etc/jupyterhub/jupyterhub_config.py
+WorkingDirectory=/etc/jupyterhub
+
+[Install]
+WantedBy=multi-user.target

@@ -13,3 +13,5 @@ shibble_dependencies:
   - python-jinja2
   - python-beaker
   - python-markupsafe
+  - python-dbus
+  - oddjob-mkhomedir

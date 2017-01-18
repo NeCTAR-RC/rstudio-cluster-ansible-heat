@@ -1,13 +1,13 @@
 ---
 - name: adding shibble group
   group:
-    name: shibble
+    name: '{{ shibble_group }}'
     system: yes
 
 - name: adding shibble user
   user:
-    name: shibble
-    group: shibble
+    name: '{{ shibble_user }}'
+    group: '{{ shibble_group }}'
     home: /var/lib/shibble
     shell: /bin/false
     system: yes
@@ -15,7 +15,7 @@
 
 - name: creating directories
   file:
-    path: "{{ item }}"
+    path: '{{ item }}'
     state: directory
     mode: 0755
   with_items:
@@ -29,15 +29,15 @@
     path: /var/log/shibble
     state: directory
     owner: www-data
-    group: shibble
+    group: '{{ shibble_group }}'
     mode: 0770
 
 - name: creating directory /var/run/shibble
   file:
     path: /var/run/shibble
     state: directory
-    owner: shibble
-    group: shibble
+    owner: '{{ shibble_user }}'
+    group: '{{ shibble_group }}'
     mode: 0770
 
 - name: creating directory /etc/shibble
@@ -45,15 +45,8 @@
     path: /etc/shibble
     state: directory
     owner: root
-    group: shibble
+    group: '{{ shibble_group }}'
     mode: 0750
-
-- name: install shibble config
-  template:
-    src: shibble.conf.j2
-    dest: /etc/shibble/shibble.conf
-  notify:
-    - restart apache
 
 - name: install dependencies
   apt:
@@ -83,6 +76,20 @@
     src: '{{ shibble_install_dir }}/src/shibble/docs/logging.conf'
     dest: /etc/shibble/logging.conf
     remote_src: True
+  notify:
+    - restart apache
+
+- name: install oddjobd mkhomedir config
+  template:
+    src: oddjobd-mkhomedir.conf.j2
+    dest: /etc/oddjobd.conf.d/oddjobd-mkhomedir.conf
+  notify:
+    - restart oddjobd
+
+- name: install shibble config
+  template:
+    src: shibble.conf.j2
+    dest: /etc/shibble/shibble.conf
   notify:
     - restart apache
 

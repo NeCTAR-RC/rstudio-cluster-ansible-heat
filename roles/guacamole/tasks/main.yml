@@ -36,6 +36,16 @@
     - ldconfig
   notify: restart guacd
 
+- name: Check if ldconfig has picked up libguac
+  shell: ldconfig -p | grep -q libguac
+  ignore_errors: yes
+  register: run_ldconfig
+
+- name: Run ldconfig
+  shell: ldconfig
+  ignore_errors: yes
+  when: run_ldconfig.rc == 1
+
 - name: Install systemd service file for guacd
   template:
     src: guacd.system.j2

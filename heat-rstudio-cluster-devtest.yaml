@@ -27,14 +27,18 @@ parameters:
     type: string
     description: NFS shared home size in GB
     default: 10
-  host_name:
-    type: string
-    description: Designate host name
-    default: rstudio
   domain_name:
     type: string
     description: Designate domain name
     default: 'dev.rc.nectar.org.au.'
+  stage:
+    type: string
+    description: Stage
+    default: test
+    constraints:
+      - allowed_values:
+        - test
+        - dev
 
 resources:
   secgroup:
@@ -42,14 +46,14 @@ resources:
     properties:
       description: Security group
       name: 
-        list_join: ['-', [ { get_param: app_name }, 'secgroup' ]]
+        list_join: ['-', [ { get_param: app_name }, { get_param: stage }, 'secgroup' ]]
 
   master_secgroup_rules:
     type: OS::Neutron::SecurityGroup
     properties:
       description: Security group rules
       name: 
-        list_join: ['-', [ { get_param: app_name }, 'master-secgroup-rules' ]]
+        list_join: ['-', [ { get_param: app_name }, { get_param: stage }, 'master-secgroup-rules' ]]
       rules:
         - remote_group_id: { get_resource: secgroup }
           remote_mode: remote_group_id
@@ -81,7 +85,7 @@ resources:
     properties:
       description: Security group worker rules
       name: 
-        list_join: ['-', [ { get_param: app_name }, 'worker-secgroup-rules' ]]
+        list_join: ['-', [ { get_param: app_name }, { get_param: stage }, 'worker-secgroup-rules' ]]
       rules:
         - remote_group_id: { get_resource: secgroup }
           remote_mode: remote_group_id
@@ -107,7 +111,7 @@ resources:
     type: OS::Nova::Server
     properties:
       name:
-        list_join: ['-', [ { get_param: app_name }, 'master' ]]
+        list_join: ['-', [ { get_param: app_name }, { get_param: stage }, 'master' ]]
       image: { get_param: image_id }
       flavor: { get_param: flavor }
       key_name: { get_param: key_name }
@@ -118,14 +122,14 @@ resources:
           list_join:
             - ','
             - - { get_param: app_name }
-              - list_join: ['-', [ { get_param: app_name }, 'prod', 'master' ]]
-              - list_join: ['-', [ { get_param: app_name }, 'prod' ]]
+              - list_join: ['-', [ { get_param: app_name }, { get_param: stage }, 'master' ]]
+              - list_join: ['-', [ { get_param: app_name }, { get_param: stage } ]]
               - list_join: ['-', [ { get_param: app_name }, 'master' ]]
         ansible_host_vars: 
           list_join:
             - ';'
             - - list_join: ['=', ['application', { get_param: app_name }]]
-              - 'stage=prod'
+              - list_join: ['=', ['stage', { get_param: stage }]]
               - 'role=master'
       user_data:
         str_replace:
@@ -147,7 +151,7 @@ resources:
       name:
         list_join:
           - '.'
-          - - { get_param: host_name }
+          - - list_join: ['-', [ { get_param: app_name }, { get_param: stage } ]]
           - - { get_param: domain_name }
       type: A
       data: { get_attr: [ master_server, first_address ] }
@@ -176,7 +180,7 @@ resources:
         type: OS::Nova::Server
         properties:
           name: 
-            list_join: ['-', [ { get_param: app_name }, 'worker-%index%' ]]
+            list_join: ['-', [ { get_param: app_name }, { get_param: stage }, 'worker-%index%' ]]
           image: { get_param: image_id }
           flavor: { get_param: flavor }
           key_name: { get_param: key_name }
@@ -187,14 +191,14 @@ resources:
               list_join:
                 - ','
                 - - { get_param: app_name }
-                  - list_join: ['-', [ { get_param: app_name }, 'prod', 'worker' ]]
-                  - list_join: ['-', [ { get_param: app_name }, 'prod' ]]
+                  - list_join: ['-', [ { get_param: app_name }, { get_param: stage }, 'worker' ]]
+                  - list_join: ['-', [ { get_param: app_name }, { get_param: stage } ]]
                   - list_join: ['-', [ { get_param: app_name }, 'worker' ]]
             ansible_host_vars: 
               list_join:
                 - ';'
                 - - list_join: ['=', ['application', { get_param: app_name }]]
-                  - stage=prod
+                  - list_join: ['=', ['stage', { get_param: stage }]]
                   - role=worker
 
 outputs:
