@@ -15,3 +15,16 @@ guacamole_mysql_port: 3306
 guacamole_mysql_database: guac
 guacamole_mysql_username: guacuser
 guacamole_mysql_password: guacpass
+
+xrdp_dependency_packages:
+  - adduser
+  - init-system-helpers
+  - libfuse2
+  - libjpeg8
+  - libopus0
+  - libpam0g
+  - libssl1.0.0
+  - libx11-6
+  - libxfixes3
+  - libxrandr2
+  - xserver-xorg-core
